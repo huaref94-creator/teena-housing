@@ -1,0 +1,64 @@
+from flask import Flask, render_template, request, redirect, session
+import sqlite3
+
+app = Flask(__name__)
+app.secret_key = 'secret123'
+
+conn = sqlite3.connect('housing.db', check_same_thread=False)
+c = conn.cursor()
+
+c.execute('''CREATE TABLE IF NOT EXISTS units (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    house_number TEXT,
+    buyer_name TEXT,
+    reservation_amount REAL,
+    down_payment REAL,
+    monthly_installment REAL,
+    yearly_payment REAL
+)''')
+
+USERNAME = "s7s"
+PASSWORD = "Tina@2026"
+
+@app.route('/', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        if request.form['username'] == USERNAME and request.form['password'] == PASSWORD:
+            session['logged_in'] = True
+            return redirect('/dashboard')
+    return render_template('login.html')
+
+@app.route('/dashboard', methods=['GET', 'POST'])
+def dashboard():
+    if not session.get('logged_in'):
+        return redirect('/')
+
+    if request.method == 'POST':
+        data = (
+            request.form['house_number'],
+            request.form['buyer_name'],
+            request.form['reservation_amount'],
+            request.form['down_payment'],
+            request.form['monthly_installment'],
+            request.form['yearly_payment']
+        )
+        c.execute("INSERT INTO units (house_number, buyer_name, reservation_amount, down_payment, monthly_installment, yearly_payment) VALUES (?, ?, ?, ?, ?, ?)", data)
+        conn.commit()
+
+    c.execute("SELECT * FROM units")
+    units = c.fetchall()
+    return render_template('dashboard.html', units=units)
+
+@app.route('/delete/<int:id>')
+def delete(id):
+    c.execute("DELETE FROM units WHERE id=?", (id,))
+    conn.commit()
+    return redirect('/dashboard')
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect('/')
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
