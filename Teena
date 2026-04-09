@@ -42,7 +42,7 @@ def dashboard():
             request.form['monthly_installment'],
             request.form['yearly_payment']
         )
-        c.execute("INSERT INTO units (house_number, buyer_name, reservation_amount, down_payment, monthly_installment, yearly_payment) VALUES (?, ?, ?, ?, ?, ?)", data)
+        c.execute("INSERT INTO units VALUES (NULL,?,?,?,?,?,?)", data)
         conn.commit()
 
     c.execute("SELECT * FROM units")
@@ -61,4 +61,4 @@ def logout():
     return redirect('/')
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=10000)
